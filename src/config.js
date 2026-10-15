@@ -22,7 +22,7 @@ export const REGION = {
 // 4·6번: 지도 중심에서 조금씩 떨어진 위치 (가상)
 export const DRAINS = [
   { id: "A", name: "시범 1번", lat: 36.630387, lng: 127.457453 }, // 8Q89JFJ4+5X4
-  { id: "B", name: "시범 2번", lat: 36.631712, lng: 127.453266 }, // 8Q89JFJ3+M8J
+  { id: "B", name: "시범 2번", lat: 36.630137, lng: 127.454422 }, // 8Q89JFJ3+3Q3
   { id: "C", name: "시범 3번", lat: 36.628138, lng: 127.452641 }, // 8Q89JFH3+732
   { id: "D", name: "시범 4번", lat: 36.6282, lng: 127.4584 },
   { id: "E", name: "시범 5번", lat: 36.626587, lng: 127.454078 }, // 8Q89JFG3+JJP
