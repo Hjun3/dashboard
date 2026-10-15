@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DRAINS, LIVE, SCENARIO } from "./config.js";
 import { judge } from "./logic/judge.js";
 import { STATES, stateText } from "./logic/states.js";
@@ -7,11 +7,14 @@ import { createLiveSim } from "./sim/simulator.js";
 import TopBar from "./components/TopBar.jsx";
 import WeatherCard from "./components/WeatherCard.jsx";
 import ScenarioControls from "./components/ScenarioControls.jsx";
-import MapView from "./components/MapView.jsx";
 import Summary from "./components/Summary.jsx";
 import PriorityList from "./components/PriorityList.jsx";
-import DrainDetail from "./components/DrainDetail.jsx";
 import Toasts from "./components/Toasts.jsx";
+
+// 지도(Leaflet)와 그래프(Recharts)는 크기가 커서 따로 불러온다.
+// 첫 화면(상단 바, 날씨, 상태 요약, 출동 목록)이 먼저 뜨고, 지도와 그래프는 곧이어 채워진다.
+const MapView = lazy(() => import("./components/MapView.jsx"));
+const DrainDetail = lazy(() => import("./components/DrainDetail.jsx"));
 
 const IDS = DRAINS.map((d) => d.id);
 const KEEP_KEY = "drain-dashboard-view"; // 3D 화면에서 돌아왔을 때 보던 화면을 이어서 보여 주기 위함
@@ -208,21 +211,25 @@ export default function App() {
       <main className="layout">
         <div className="col-left">
           <WeatherCard mode={mode} weather={mode === "scenario" ? view.weather : liveWeather} scenarioClock={formatElapsed(view.now)} />
-          <MapView drains={DRAINS} results={results} selectedId={selectedId} onSelect={select} />
+          <Suspense fallback={<Loading title="지도" height={250} />}>
+            <MapView drains={DRAINS} results={results} selectedId={selectedId} onSelect={select} />
+          </Suspense>
           <Summary results={results} />
           <PriorityList drains={DRAINS} results={results} onSelect={select} />
         </div>
         <div className="col-right" ref={detailRef}>
-          <DrainDetail
-            drain={selected}
-            history={view.history[selectedId]}
-            result={results[selectedId]}
-            rainAt={view.rainAt}
-            formatT={view.formatT}
-            xDomain={view.xDomain}
-            xTicks={view.xTicks}
-            onOpen3D={open3D}
-          />
+          <Suspense fallback={<Loading title={`${selected.name} 상세`} height={600} />}>
+            <DrainDetail
+              drain={selected}
+              history={view.history[selectedId]}
+              result={results[selectedId]}
+              rainAt={view.rainAt}
+              formatT={view.formatT}
+              xDomain={view.xDomain}
+              xTicks={view.xTicks}
+              onOpen3D={open3D}
+            />
+          </Suspense>
           {mode === "scenario" && (
             <p className="muted small scenario-note">
               시나리오는 호우 하루를 약 60초로 압축했습니다 (화면 1초 = 실제 5분). 판정은 가상 센서 값을 판정 로직에 넣어 나온 결과입니다.
@@ -231,6 +238,16 @@ export default function App() {
         </div>
       </main>
     </div>
+  );
+}
+
+// 지도·그래프를 불러오는 동안 같은 크기의 빈 카드를 보여 줘 화면이 덜컹거리지 않게 한다
+function Loading({ title, height }) {
+  return (
+    <section className="card" style={{ minHeight: height }}>
+      <h2>{title}</h2>
+      <p className="muted small">불러오는 중…</p>
+    </section>
   );
 }
 

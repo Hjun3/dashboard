@@ -8,7 +8,8 @@ const NCST_URL = "https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getU
 const WARN_URL = "https://apis.data.go.kr/1360000/WthrWrnInfoService/getPwnStatus";
 
 const CACHE_MS = 10 * 60 * 1000;
-const TIMEOUT_MS = 3000;
+// 공공데이터포털은 가끔 느려서 넉넉히 8초 (Vercel 무료 플랜 함수 제한 시간 안쪽)
+const TIMEOUT_MS = 8000;
 let cache = null; // { at, body }
 
 function serviceKey() {
