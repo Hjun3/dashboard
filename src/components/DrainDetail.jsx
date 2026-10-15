@@ -67,13 +67,13 @@ export default function DrainDetail({ drain, history, result, rainAt, formatT, x
         {hovered ? (
           <>
             <strong>{formatT(hovered.t)}</strong>
-            <span>수위 {val(hovered.level, "")}</span>
-            <span>강수량 {hovered.rain} mm</span>
-            <span>적재량 {val(hovered.loadPct, "%")}</span>
-            <span>신호 {val(hovered.rssi, " dBm")}</span>
+            <span>수위 {val(hovered.level, 1, "")}</span>
+            <span>강수 {val(hovered.rain, 1, "mm")}</span>
+            <span>적재 {val(hovered.loadPct, 0, "%")}</span>
+            <span>신호 {val(hovered.rssi, 0, "dBm")}</span>
           </>
         ) : (
-          <span className="muted">그래프를 터치하거나 좌우로 끌면 그 시각의 값이 나옵니다</span>
+          <span className="muted">그래프를 터치하면 그 시각 값이 나옵니다</span>
         )}
       </div>
       <Chart title="수위 (구조물 기준선)" pointer={pointer}>
@@ -157,8 +157,9 @@ function Cursor({ t, y }) {
   );
 }
 
-function val(v, unit) {
-  return v == null ? "통신 끊김" : `${v}${unit}`;
+// 값이 바뀌어도 요약줄 길이가 크게 달라지지 않도록 자릿수를 고정
+function val(v, digits, unit) {
+  return v == null ? "끊김" : `${v.toFixed(digits)}${unit}`;
 }
 
 function levelText(lv) {
