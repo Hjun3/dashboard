@@ -49,10 +49,10 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 /* 상단 바 */
 .topbar {
   position: sticky; top: 0; z-index: 1000;
-  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px;
   padding: calc(10px + env(safe-area-inset-top, 0px)) 16px 10px;
   background: var(--card); border-bottom: 1px solid var(--line);
 }
+.topbar-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; max-width: 1200px; margin: 0 auto; }
 .brand { display: flex; flex-direction: column; }
 .seg { display: flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
 .seg button { border: 0; background: var(--btn); padding: 7px 12px; font-size: 14px; cursor: pointer; }
@@ -63,7 +63,6 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .col-left, .col-right { display: grid; gap: 12px; align-content: start; min-width: 0; }
 @media (min-width: 900px) {
   .layout { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
-  .col-right { position: sticky; top: 72px; }
 }
 
 .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px; min-width: 0; }
@@ -85,9 +84,22 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .btn[aria-pressed="true"] { background: var(--btn-on); color: var(--btn-on-ink); }
 .btn.primary { background: var(--accent); border-color: var(--accent); color: #1d2328; font-weight: 700; }
 .btn.wide { width: 100%; margin: 12px 0 4px; padding: 10px; }
-.progress { height: 6px; background: var(--line); border-radius: 3px; margin: 10px 0 6px; overflow: hidden; }
+.progress { height: 6px; background: var(--line); border-radius: 3px; margin: 8px 0; overflow: hidden; }
 .progress span { display: block; height: 100%; background: var(--accent); transition: width .3s; }
-.controls p { margin: 0; }
+
+/* 상단에 고정되는 시나리오 재생 막대 */
+.scenario-bar { max-width: 1200px; margin: 10px auto 0; padding-top: 10px; border-top: 1px solid var(--line); }
+.scenario-bar .btn { padding: 6px 11px; }
+.sec { font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.chips { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 4px; }
+.chip {
+  width: 100%; border: 2px solid transparent; border-radius: 8px; padding: 4px 2px; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; color: #fff; line-height: 1.2;
+}
+.chip b { font-size: 13px; }
+.chip span { font-size: 10.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.chip[aria-pressed="true"] { border-color: var(--ink); box-shadow: 0 0 0 1px var(--card) inset; }
+.scenario-note { margin: 0; }
 
 /* 지도 */
 .map { height: 260px; border-radius: 8px; overflow: hidden; z-index: 0; }
@@ -120,7 +132,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 /* 알림 미리보기 */
 .toasts {
-  position: fixed; top: calc(64px + env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%);
+  position: fixed; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); left: 50%; transform: translateX(-50%);
   width: min(420px, calc(100% - 32px)); z-index: 2000; display: grid; gap: 6px; pointer-events: none;
 }
 .toast {
@@ -130,5 +142,5 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   animation: drop .25s ease-out;
 }
 .toast-tag { font-size: 11px; color: var(--muted); }
-@keyframes drop { from { transform: translateY(-8px); opacity: 0; } }
+@keyframes drop { from { transform: translateY(8px); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .toast { animation: none; } .progress span { transition: none; } }

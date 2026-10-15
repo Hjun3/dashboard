@@ -16,7 +16,11 @@ export default function WeatherCard({ mode, weather, scenarioClock }) {
       {weather == null ? (
         <p className="muted">날씨를 불러오는 중입니다…</p>
       ) : !weather.ok ? (
-        <p className="muted">날씨를 불러오지 못했습니다</p>
+        <>
+          <p className="muted">날씨를 불러오지 못했습니다</p>
+          {/* 원인 확인용 한 줄 (예: 인증키 미설정, 응답 지연) */}
+          {(weather.detail || weather.error) && <p className="muted small">{weather.detail || weather.error}</p>}
+        </>
       ) : (
         <>
           <dl className="kv">

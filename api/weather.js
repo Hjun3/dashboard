@@ -28,15 +28,22 @@ async function getJson(url, params) {
       return JSON.parse(text);
     } catch {
       // 키 오류 등은 JSON 이 아니라 XML 로 오는 경우가 있다
-      throw new Error(`JSON 이 아닌 응답 (HTTP ${res.status})`);
+      const msg = text.match(/<(?:returnAuthMsg|resultMsg)>([^<]*)</)?.[1];
+      throw new Error(`JSON 이 아닌 응답 (HTTP ${res.status}${msg ? `, ${msg}` : ""})`);
     }
   } finally {
     clearTimeout(timer);
   }
 }
 
+// 성공한 응답은 Vercel 앞단(CDN)에서도 10분 동안 재사용해, 접속자가 많아도
+// 기상청 호출은 10분에 한 번 정도만 일어나게 한다 (무료 플랜 한도 대비).
+// 실패한 응답은 1분만 재사용해, 키를 넣거나 기상청이 살아나면 곧 반영되게 한다.
+const CACHE_OK = "public, s-maxage=600, stale-while-revalidate=60";
+const CACHE_FAIL = "public, s-maxage=60";
+
 export default async function handler(req, res) {
-  res.setHeader("Cache-Control", "public, s-maxage=600, stale-while-revalidate=60");
+  res.setHeader("Cache-Control", CACHE_OK);
 
   if (cache && Date.now() - cache.at < CACHE_MS) {
     return res.status(200).json(cache.body);
@@ -44,7 +51,8 @@ export default async function handler(req, res) {
 
   const key = serviceKey();
   if (!key) {
-    return res.status(200).json({ ok: false, error: "인증키가 설정되지 않았습니다" });
+    res.setHeader("Cache-Control", CACHE_FAIL);
+    return res.status(200).json({ ok: false, error: "인증키가 설정되지 않았습니다 (Vercel 환경변수 KMA_SERVICE_KEY)" });
   }
 
   const { date, time } = baseDateTime();
@@ -57,12 +65,15 @@ export default async function handler(req, res) {
 
   if (ncst.status === "rejected") {
     console.error(ncst.reason);
-    return res.status(200).json({ ok: false, error: "기상청 실황을 불러오지 못했습니다" });
+    res.setHeader("Cache-Control", CACHE_FAIL);
+    // detail: 원인 확인용 (인증키는 들어가지 않는다)
+    return res.status(200).json({ ok: false, error: "기상청 실황을 불러오지 못했습니다", detail: describe(ncst.reason) });
   }
   if (warn.status === "rejected") console.error(warn.reason);
 
   const body = {
     ...ncst.value,
+    ...(warn.status === "rejected" && { warningDetail: describe(warn.reason) }),
     // 특보만 실패하면 강수량은 보여 주고 특보는 "unknown"(확인 불가)으로 둔다
     warning: warn.status === "fulfilled" ? warn.value : "unknown",
     observedAt: toIso(date, time),
@@ -70,4 +81,10 @@ export default async function handler(req, res) {
   };
   cache = { at: Date.now(), body };
   return res.status(200).json(body);
+}
+
+function describe(err) {
+  if (err?.name === "AbortError") return `기상청 응답이 ${TIMEOUT_MS / 1000}초 안에 오지 않았습니다`;
+  const code = err?.cause?.code;
+  return String(err?.message ?? err) + (code ? ` (${code})` : "");
 }

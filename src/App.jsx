@@ -53,9 +53,9 @@ export default function App() {
       try {
         const res = await fetch("/api/weather");
         const body = await res.json();
-        if (alive) setLiveWeather(body.ok ? body : { ok: false });
+        if (alive) setLiveWeather(body);
       } catch {
-        if (alive) setLiveWeather({ ok: false });
+        if (alive) setLiveWeather({ ok: false, error: "서버에 연결하지 못했습니다" });
       }
     }
     load();
@@ -178,22 +178,32 @@ export default function App() {
 
   return (
     <div className="app">
-      <TopBar mode={mode} onMode={changeMode} clock={clock} />
+      <TopBar mode={mode} onMode={changeMode} clock={clock}>
+        {mode === "scenario" && (
+          <ScenarioControls
+            sec={sec}
+            playing={playing}
+            speed={speed}
+            drains={DRAINS}
+            results={results}
+            selectedId={selectedId}
+            onSelect={select}
+            onPlay={() => {
+              if (sec >= SCENARIO.lengthSec) setSec(0);
+              setPlaying((p) => !p);
+            }}
+            onRestart={() => { setSec(0); setPlaying(true); }}
+            onSpeed={() => setSpeed((s) => (s === 1 ? 2 : 1))}
+          />
+        )}
+      </TopBar>
       <Toasts items={toasts} onSelect={select} />
       <main className="layout">
         <div className="col-left">
           {mode === "scenario" && (
-            <ScenarioControls
-              sec={sec}
-              playing={playing}
-              speed={speed}
-              onPlay={() => {
-                if (sec >= SCENARIO.lengthSec) setSec(0);
-                setPlaying((p) => !p);
-              }}
-              onRestart={() => { setSec(0); setPlaying(true); }}
-              onSpeed={() => setSpeed((s) => (s === 1 ? 2 : 1))}
-            />
+            <p className="muted small scenario-note">
+              호우 하루를 약 60초로 압축했습니다 (화면 1초 = 실제 5분). 판정은 가상 센서 값을 판정 로직에 넣어 나온 결과입니다.
+            </p>
           )}
           <WeatherCard mode={mode} weather={mode === "scenario" ? view.weather : liveWeather} scenarioClock={formatElapsed(view.now)} />
           <MapView drains={DRAINS} results={results} selectedId={selectedId} onSelect={select} />
