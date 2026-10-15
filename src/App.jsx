@@ -119,11 +119,18 @@ export default function App() {
       const history = Object.fromEntries(IDS.map((i) => [i, scenarioHistory(i, sec)]));
       const now = sec * SCENARIO.minPerSec;
       const rainAt = (t) => scenarioWeather(t / SCENARIO.minPerSec).rain1h;
-      return { weather: { ok: true, ...w }, history, now, rainAt, formatT: formatElapsed };
+      // 가로축: 재생 전에도 시나리오 전체 길이(0:00~5:00)를 보여 준다
+      const end = SCENARIO.lengthSec * SCENARIO.minPerSec;
+      const xTicks = Array.from({ length: end / 60 + 1 }, (_, i) => i * 60);
+      return { weather: { ok: true, ...w }, history, now, rainAt, formatT: formatElapsed, xDomain: [0, end], xTicks };
     }
     const w = liveWeather?.ok ? { ...liveWeather, ...rainTrack } : { raining: false, rain1h: 0, tempC: null, ...rainTrack };
     const rainMap = new Map(live.rain.map((r) => [r.t, r.rain1h]));
-    return { weather: w, history: live.history, now: live.now, rainAt: (t) => rainMap.get(t) ?? 0, formatT: formatClock };
+    // 가로축: 최근 2시간, 눈금은 30분마다
+    const start = live.now - LIVE.backfillMin;
+    const xTicks = [];
+    for (let t = Math.ceil(start / 30) * 30; t <= live.now; t += 30) xTicks.push(t);
+    return { weather: w, history: live.history, now: live.now, rainAt: (t) => rainMap.get(t) ?? 0, formatT: formatClock, xDomain: [start, live.now], xTicks };
   }, [mode, sec, live, liveWeather, rainTrack]);
 
   const results = useMemo(
@@ -212,6 +219,8 @@ export default function App() {
             result={results[selectedId]}
             rainAt={view.rainAt}
             formatT={view.formatT}
+            xDomain={view.xDomain}
+            xTicks={view.xTicks}
             onOpen3D={open3D}
           />
           {mode === "scenario" && (
