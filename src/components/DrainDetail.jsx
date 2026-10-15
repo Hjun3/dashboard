@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Area, CartesianGrid, ComposedChart, Line, ReferenceLine, ResponsiveContainer, XAxis, YAxis } from "recharts";
+import { Area, CartesianGrid, ComposedChart, Line, ReferenceDot, ReferenceLine, ResponsiveContainer, XAxis, YAxis } from "recharts";
 import { TH } from "../config.js";
 import { STATES, stateText } from "../logic/states.js";
 
@@ -84,8 +84,8 @@ export default function DrainDetail({ drain, history, result, rainAt, formatT, x
           <ReferenceLine y={TH.pipeTop} stroke="var(--muted)" strokeDasharray="4 3" label={refLabel("배수관 상단")} />
           <ReferenceLine y={TH.floodWarn} stroke="var(--muted)" strokeDasharray="4 3" label={refLabel("바스켓 바닥")} />
           <ReferenceLine y={3} stroke="var(--muted)" strokeDasharray="4 3" label={refLabel("그레이팅 아래")} />
-          <Cursor t={hoverT} />
-          <Line dataKey="level" stroke={SERIES} strokeWidth={2} dot={false} isAnimationActive={false} connectNulls={false} />
+          <Cursor t={hoverT} y={hovered?.level} />
+          <Line dataKey="level" stroke={SERIES} strokeWidth={2} dot={false} activeDot={false} isAnimationActive={false} connectNulls={false} />
         </ComposedChart>
       </Chart>
 
@@ -94,8 +94,8 @@ export default function DrainDetail({ drain, history, result, rainAt, formatT, x
           <Grid />
           <XAxis {...xAxis} />
           <YAxis domain={[0, rainTop]} ticks={[0, rainTop / 2, rainTop]} tick={AXIS} width={Y_WIDTH} />
-          <Cursor t={hoverT} />
-          <Area dataKey="rain" type="stepAfter" stroke="var(--rain)" fill="var(--rain)" fillOpacity={0.7} strokeWidth={1} isAnimationActive={false} />
+          <Cursor t={hoverT} y={hovered?.rain} />
+          <Area dataKey="rain" type="stepAfter" stroke="var(--rain)" fill="var(--rain)" fillOpacity={0.7} strokeWidth={1} activeDot={false} isAnimationActive={false} />
         </ComposedChart>
       </Chart>
 
@@ -105,8 +105,8 @@ export default function DrainDetail({ drain, history, result, rainAt, formatT, x
           <XAxis {...xAxis} />
           <YAxis domain={[0, 100]} ticks={[0, 50, 100]} tick={AXIS} width={Y_WIDTH} />
           <ReferenceLine y={TH.collectLoad} stroke="var(--muted)" strokeDasharray="4 3" label={refLabel("수거 기준")} />
-          <Cursor t={hoverT} />
-          <Line dataKey="loadPct" stroke={SERIES} strokeWidth={2} dot={false} isAnimationActive={false} connectNulls={false} />
+          <Cursor t={hoverT} y={hovered?.loadPct} />
+          <Line dataKey="loadPct" stroke={SERIES} strokeWidth={2} dot={false} activeDot={false} isAnimationActive={false} connectNulls={false} />
         </ComposedChart>
       </Chart>
 
@@ -115,8 +115,8 @@ export default function DrainDetail({ drain, history, result, rainAt, formatT, x
           <Grid />
           <XAxis {...xAxis} />
           <YAxis domain={[-120, -60]} ticks={[-120, -90, -60]} tick={AXIS} width={Y_WIDTH} />
-          <Cursor t={hoverT} />
-          <Line dataKey="rssi" stroke={SERIES} strokeWidth={2} dot={false} isAnimationActive={false} connectNulls={false} />
+          <Cursor t={hoverT} y={hovered?.rssi} />
+          <Line dataKey="rssi" stroke={SERIES} strokeWidth={2} dot={false} activeDot={false} isAnimationActive={false} connectNulls={false} />
         </ComposedChart>
       </Chart>
       <p className="muted small">끊긴 구간은 선이 비어 있습니다. 수위 0 = 바닥, 1 = 배수관 상단, 2 = 바스켓 바닥, 3 = 그레이팅 바로 아래</p>
@@ -146,8 +146,15 @@ function Chart({ title, pointer, children }) {
   );
 }
 
-function Cursor({ t }) {
-  return t == null ? null : <ReferenceLine x={t} stroke="var(--ink)" strokeWidth={1.5} ifOverflow="hidden" />;
+// 고른 시각의 세로선과 그 시각 값의 점. 네 그래프가 같은 시각을 쓰므로 함께 움직인다
+function Cursor({ t, y }) {
+  if (t == null) return null;
+  return (
+    <>
+      <ReferenceLine x={t} stroke="var(--ink)" strokeWidth={1.5} ifOverflow="hidden" />
+      {y != null && <ReferenceDot x={t} y={y} r={4} fill={SERIES} stroke="var(--card)" strokeWidth={2} ifOverflow="hidden" />}
+    </>
+  );
 }
 
 function val(v, unit) {
