@@ -3,6 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- 삼성 인터넷·크롬의 강제 다크모드가 색을 뒤집지 않도록: 이 페이지가 다크모드를 직접 지원함 -->
+<meta name="color-scheme" content="light dark">
 <title>빗물받이 막힘 감지 3D 모델</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -35,11 +37,6 @@ body{height:100%;margin:0;background:var(--bg);color:var(--ink);
 #view{position:absolute;inset:0}
 #view canvas{display:block;width:100%;height:100%;touch-action:none}
 #labels{position:absolute;inset:0;pointer-events:none;width:100%;height:100%}
-#labels text{font-family:inherit;font-size:13px;font-weight:700;fill:#1d2328}
-#labels rect{fill:#ffffff;stroke:#1d2328;stroke-width:1}
-#labels line{stroke:#1d2328;stroke-width:1.4}
-#labels circle{fill:var(--accent);stroke:#1d2328;stroke-width:1}
-#labels.narrow text{font-size:11.5px}
 .panel{background:var(--panel);border-left:1px solid var(--line);padding:22px 20px;overflow-y:auto}
 h1{font-size:19px;line-height:1.3;margin:0 0 4px;font-weight:700}
 .lead{margin:0 0 20px;color:var(--muted);font-size:14px}
@@ -72,7 +69,8 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline
 <div class="app">
   <div class="stage">
     <div id="view"></div>
-    <svg id="labels" aria-hidden="true"></svg>
+    <!-- 부품 이름은 캔버스에 그린다: 브라우저 강제 다크모드가 글씨 색을 바꾸지 못하게 -->
+    <canvas id="labels" aria-hidden="true"></canvas>
     <div class="hint">드래그로 회전 · 휠·두 손가락으로 확대</div>
   </div>
   <aside class="panel">
@@ -557,37 +555,35 @@ function layoutLabels(w,h,scale){
   });
   return out;
 }
-const svg=document.getElementById("labels");
+const labelCv=document.getElementById("labels"), labelCtx=labelCv.getContext("2d");
+const FONT='"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif';
 const NARROW=640; // 모델 화면 폭이 이보다 좁으면(폰) 괄호 설명을 빼고 작은 글씨로
 // "넘침 통로 (거름망이 차도 물이 빠짐)" → "넘침 통로", "싱글 포인트 로드셀 (왼쪽)" → "로드셀 (왼쪽)"
 const shortName=t=>/\((왼쪽|오른쪽)\)$/.test(t)?t.replace("싱글 포인트 ",""):t.split(" (")[0];
 function drawSvgLabels(){
-  const w=host.clientWidth,h=host.clientHeight;
-  if(!document.getElementById("t-labels").checked){svg.innerHTML=""; return;}
-  const narrow=w<NARROW;
-  svg.classList.toggle("narrow",narrow);
-  const L=layoutLabels(w,h,narrow?0.85:1); let s="";
-  L.forEach(o=>{
-    const tx=o.side==="L"?o.lx-8:o.lx+8, anchor=o.side==="L"?"end":"start";
-    s+='<line x1="'+o.ax+'" y1="'+o.ay+'" x2="'+o.lx+'" y2="'+o.ly+'"/>';
-    s+='<circle cx="'+o.ax+'" cy="'+o.ay+'" r="3.5"/>';
-    s+='<rect rx="4" ry="4"/><text x="'+tx+'" y="'+(o.ly+4.5)+'" text-anchor="'+anchor+'"></text>';
+  const w=host.clientWidth,h=host.clientHeight, dpr=Math.min(window.devicePixelRatio||1,2);
+  if(labelCv.width!==Math.round(w*dpr)||labelCv.height!==Math.round(h*dpr)){labelCv.width=Math.round(w*dpr); labelCv.height=Math.round(h*dpr);}
+  labelCtx.setTransform(dpr,0,0,dpr,0,0); labelCtx.clearRect(0,0,w,h);
+  if(!document.getElementById("t-labels").checked) return;
+  const narrow=w<NARROW, fs=narrow?11.5:13;
+  labelCtx.font="700 "+fs+"px "+FONT; labelCtx.textBaseline="middle";
+  layoutLabels(w,h,narrow?0.85:1).forEach(o=>{
+    const t=narrow?shortName(o.t):o.t, tw=labelCtx.measureText(t).width, bw=tw+10, bh=fs+8;
+    // 상자 위치: 왼쪽 열은 선 끝의 왼쪽, 오른쪽 열은 오른쪽. 화면 밖으로 나가면 안쪽으로 밀어 넣는다
+    let bx=o.side==="L"?o.lx-8-tw-5:o.lx+8-5;
+    bx=Math.max(2,Math.min(w-2-bw,bx));
+    const ex=o.side==="L"?bx+bw:bx;
+    labelCtx.strokeStyle="#1d2328"; labelCtx.lineWidth=1.4;
+    labelCtx.beginPath(); labelCtx.moveTo(o.ax,o.ay); labelCtx.lineTo(ex,o.ly); labelCtx.stroke();
+    labelCtx.fillStyle="#e08a12"; labelCtx.lineWidth=1;
+    labelCtx.beginPath(); labelCtx.arc(o.ax,o.ay,3.5,0,Math.PI*2); labelCtx.fill(); labelCtx.stroke();
+    labelCtx.fillStyle="#ffffff";
+    labelCtx.beginPath(); roundRect(bx,o.ly-bh/2,bw,bh,4); labelCtx.fill(); labelCtx.stroke();
+    labelCtx.fillStyle="#1d2328"; labelCtx.fillText(t,bx+5,o.ly+0.5);
   });
-  svg.innerHTML=s;
-  const rects=svg.querySelectorAll("rect"), lines=svg.querySelectorAll("line");
-  svg.querySelectorAll("text").forEach((el,i)=>{
-    el.textContent=narrow?shortName(L[i].t):L[i].t;
-    let b=el.getBBox();
-    // 글씨가 화면 밖으로 나가면 안쪽으로 밀어 넣는다 (선 끝도 같이)
-    const dx=b.x<4?4-b.x:(b.x+b.width>w-4?w-4-b.x-b.width:0);
-    if(dx){
-      el.setAttribute("x",parseFloat(el.getAttribute("x"))+dx);
-      lines[i].setAttribute("x2",L[i].lx+dx);
-      b=el.getBBox();
-    }
-    rects[i].setAttribute("x",b.x-5); rects[i].setAttribute("y",b.y-2);
-    rects[i].setAttribute("width",b.width+10); rects[i].setAttribute("height",b.height+4);
-  });
+}
+function roundRect(x,y,w,h,r){
+  labelCtx.moveTo(x+r,y); labelCtx.arcTo(x+w,y,x+w,y+h,r); labelCtx.arcTo(x+w,y+h,x,y+h,r); labelCtx.arcTo(x,y+h,x,y,r); labelCtx.arcTo(x,y,x+w,y,r); labelCtx.closePath();
 }
 
 /* ---------- 크기 ---------- */

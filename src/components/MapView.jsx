@@ -15,6 +15,7 @@ export default function MapView({ drains, results, selectedId, onSelect }) {
   useEffect(() => {
     const m = L.map(box.current, { scrollWheelZoom: false, attributionControl: true, zoomSnap: 0.25 })
       .setView([REGION.center.lat, REGION.center.lng], REGION.zoom);
+    m.attributionControl.setPrefix(false); // "Leaflet" 글자 제거 (OpenStreetMap 출처는 이용 조건이라 남김)
     L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 19,
       attribution: "&copy; OpenStreetMap",

@@ -140,6 +140,10 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .chart { margin: 14px 0 0; }
 .chart figcaption { font-size: 13px; font-weight: 600; color: var(--muted); margin-bottom: 4px; }
 .chart-box { height: 120px; }
+/* 그래프를 터치해도 테두리가 생기지 않게 */
+.chart-box :focus { outline: none; }
+/* 지도 출처 표기(OpenStreetMap 필수)는 작게 */
+.leaflet-control-attribution { font-size: 10px; }
 .tip { background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 4px 8px; font-size: 12.5px; }
 
 /* 알림 미리보기 */

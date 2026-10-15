@@ -40,7 +40,7 @@ export default function DrainDetail({ drain, history, result, rainAt, formatT, o
       <button className="btn primary wide" onClick={onOpen3D}>3D로 보기</button>
 
       <Chart title="수위 (구조물 기준선)" data={data}>
-        <LineChart data={data} syncId="drain" margin={MARGIN}>
+        <LineChart data={data} syncId="drain" margin={MARGIN} accessibilityLayer={false}>
           <Grid />
           <XAxis dataKey="label" tick={AXIS} minTickGap={40} />
           <YAxis domain={[0, 3.2]} ticks={[0, 1, 2, 3]} tick={AXIS} width={28} />
@@ -53,7 +53,7 @@ export default function DrainDetail({ drain, history, result, rainAt, formatT, o
       </Chart>
 
       <Chart title="1시간 강수량 (mm)" data={data}>
-        <BarChart data={data} syncId="drain" margin={MARGIN}>
+        <BarChart data={data} syncId="drain" margin={MARGIN} accessibilityLayer={false}>
           <Grid />
           <XAxis dataKey="label" tick={AXIS} minTickGap={40} />
           <YAxis tick={AXIS} width={28} />
@@ -63,7 +63,7 @@ export default function DrainDetail({ drain, history, result, rainAt, formatT, o
       </Chart>
 
       <Chart title="적재량 (%)" data={data}>
-        <LineChart data={data} syncId="drain" margin={MARGIN}>
+        <LineChart data={data} syncId="drain" margin={MARGIN} accessibilityLayer={false}>
           <Grid />
           <XAxis dataKey="label" tick={AXIS} minTickGap={40} />
           <YAxis domain={[0, 100]} ticks={[0, 50, 100]} tick={AXIS} width={28} />
@@ -74,7 +74,7 @@ export default function DrainDetail({ drain, history, result, rainAt, formatT, o
       </Chart>
 
       <Chart title="신호 세기 (dBm)" data={data}>
-        <LineChart data={data} syncId="drain" margin={MARGIN}>
+        <LineChart data={data} syncId="drain" margin={MARGIN} accessibilityLayer={false}>
           <Grid />
           <XAxis dataKey="label" tick={AXIS} minTickGap={40} />
           <YAxis domain={[-120, -60]} ticks={[-120, -90, -60]} tick={AXIS} width={34} />
