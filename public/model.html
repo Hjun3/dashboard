@@ -39,20 +39,16 @@ body{height:100%;margin:0;background:var(--bg);color:var(--ink);
 #labels rect{fill:#ffffff;stroke:#1d2328;stroke-width:1}
 #labels line{stroke:#1d2328;stroke-width:1.4}
 #labels circle{fill:var(--accent);stroke:#1d2328;stroke-width:1}
-#labels .num circle{fill:#1d2328;stroke:#ffffff;stroke-width:2}
-#labels .num text{fill:#ffffff;font-size:12px;text-anchor:middle}
-.parts{margin:4px 0 0;padding:0;list-style:none;display:grid;gap:4px;font-size:14px}
-.parts li{display:flex;gap:8px;align-items:flex-start}
-.parts b{flex:none;width:22px;height:22px;border-radius:50%;background:var(--btn-on);color:var(--btn-on-ink);font-size:12px;display:flex;align-items:center;justify-content:center;margin-top:1px}
+#labels.narrow text{font-size:11.5px}
 .panel{background:var(--panel);border-left:1px solid var(--line);padding:22px 20px;overflow-y:auto}
 h1{font-size:19px;line-height:1.3;margin:0 0 4px;font-weight:700}
 .lead{margin:0 0 20px;color:var(--muted);font-size:14px}
 .back{display:inline-block;margin:0 0 12px;font-size:14px;font-weight:700;color:var(--ink)}
 h2{font-size:14px;margin:22px 0 8px;font-weight:700}
 .states{display:grid;grid-template-columns:1fr 1fr;gap:6px}
-.states button,.views button{font:inherit;font-size:14px;padding:9px 10px;border-radius:8px;border:1px solid var(--line);
+.states button{font:inherit;font-size:14px;padding:9px 10px;border-radius:8px;border:1px solid var(--line);
   background:var(--btn);color:var(--ink);cursor:pointer;text-align:left;display:flex;align-items:center;gap:8px}
-.states button[aria-pressed="true"],.views button[aria-pressed="true"]{background:var(--btn-on);color:var(--btn-on-ink);border-color:var(--btn-on)}
+.states button[aria-pressed="true"]{background:var(--btn-on);color:var(--btn-on-ink);border-color:var(--btn-on)}
 .dot{width:10px;height:10px;border-radius:50%;flex:none}
 button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .readout{margin-top:12px;border:1px solid var(--line);border-radius:10px;padding:12px 14px;background:var(--btn)}
@@ -62,8 +58,6 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline
 .readout dd{margin:0;text-align:right;font-variant-numeric:tabular-nums}
 .reason{margin:10px 0 0;font-size:13.5px}
 .note{margin:8px 0 0;font-size:12px;color:var(--muted)}
-.views{display:flex;gap:6px;flex-wrap:wrap}
-.views button{flex:1 1 auto;justify-content:center}
 .toggle{display:flex;align-items:center;gap:8px;margin:6px 0;font-size:14px;cursor:pointer}
 .toggle input{width:16px;height:16px;accent-color:var(--accent)}
 .hint{position:absolute;left:14px;bottom:12px;font-size:12.5px;color:var(--muted);background:var(--panel);padding:4px 10px;border-radius:6px;border:1px solid var(--line)}
@@ -99,23 +93,11 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline
       <p class="note">기준값은 구조물 높이와 기상청 호우특보 기준을 따르며, 실측 후 지점별로 보정합니다.</p>
     </div>
 
-    <h2>보는 각도</h2>
-    <div class="views" id="views">
-      <button data-v="iso" aria-pressed="true">비스듬히</button>
-      <button data-v="front" aria-pressed="false">정면 단면</button>
-      <button data-v="top" aria-pressed="false">위에서</button>
-    </div>
-
     <h2>표시</h2>
     <label class="toggle"><input type="checkbox" id="t-labels" checked> 부품 이름</label>
     <label class="toggle"><input type="checkbox" id="t-rain" checked> 빗줄기</label>
     <label class="toggle"><input type="checkbox" id="t-beam" checked> 레이더 측정 범위</label>
     <label class="toggle"><input type="checkbox" id="t-lift"> 덮개 들어 올리기 (센서 보기)</label>
-
-    <div id="parts-box" hidden>
-      <h2>부품 이름</h2>
-      <ol class="parts" id="parts"></ol>
-    </div>
   </aside>
 </div>
 
@@ -530,9 +512,7 @@ ORDER.forEach(k=>{
 
 /* ---------- 시점 ---------- */
 const VIEWS={
-  iso:{p:[-1.25,0.85,3.35],t:[0.02,-0.4,0]},
-  front:{p:[0.0,-0.34,3.3],t:[0,-0.38,0]},
-  top:{p:[-1.0,2.6,2.0],t:[0,-0.3,-0.05]}
+  iso:{p:[-1.25,0.85,3.35],t:[0.02,-0.4,0]}
 };
 let viewKey="iso";
 function setView(k){
@@ -542,9 +522,7 @@ function setView(k){
   const far=Math.min(1.3,Math.max(1,0.9/camera.aspect));
   camera.position.sub(controls.target).multiplyScalar(far).add(controls.target);
   controls.update();
-  document.querySelectorAll("#views button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.v===k));
 }
-document.getElementById("views").addEventListener("click",e=>{const b=e.target.closest("button"); if(b) setView(b.dataset.v);});
 
 /* ---------- 부품 이름 ---------- */
 const LABELS=[
@@ -580,18 +558,15 @@ function layoutLabels(w,h,scale){
   return out;
 }
 const svg=document.getElementById("labels");
-const NARROW=640; // 모델 화면 폭이 이보다 좁으면(폰) 번호로 표시하고 이름은 아래 목록에
-const partsBox=document.getElementById("parts-box");
-document.getElementById("parts").innerHTML=LABELS.map((L,i)=>'<li><b>'+(i+1)+'</b><span></span></li>').join("");
-document.querySelectorAll("#parts span").forEach((el,i)=>el.textContent=LABELS[i].t);
+const NARROW=640; // 모델 화면 폭이 이보다 좁으면(폰) 괄호 설명을 빼고 작은 글씨로
+// "넘침 통로 (거름망이 차도 물이 빠짐)" → "넘침 통로", "싱글 포인트 로드셀 (왼쪽)" → "로드셀 (왼쪽)"
+const shortName=t=>/\((왼쪽|오른쪽)\)$/.test(t)?t.replace("싱글 포인트 ",""):t.split(" (")[0];
 function drawSvgLabels(){
   const w=host.clientWidth,h=host.clientHeight;
-  const on=document.getElementById("t-labels").checked;
+  if(!document.getElementById("t-labels").checked){svg.innerHTML=""; return;}
   const narrow=w<NARROW;
-  partsBox.hidden=!(on&&narrow);
-  if(!on){svg.innerHTML=""; return;}
-  if(narrow){drawNumbers(w,h); return;}
-  const L=layoutLabels(w,h,1); let s="";
+  svg.classList.toggle("narrow",narrow);
+  const L=layoutLabels(w,h,narrow?0.85:1); let s="";
   L.forEach(o=>{
     const tx=o.side==="L"?o.lx-8:o.lx+8, anchor=o.side==="L"?"end":"start";
     s+='<line x1="'+o.ax+'" y1="'+o.ay+'" x2="'+o.lx+'" y2="'+o.ly+'"/>';
@@ -599,41 +574,20 @@ function drawSvgLabels(){
     s+='<rect rx="4" ry="4"/><text x="'+tx+'" y="'+(o.ly+4.5)+'" text-anchor="'+anchor+'"></text>';
   });
   svg.innerHTML=s;
-  const rects=svg.querySelectorAll("rect");
+  const rects=svg.querySelectorAll("rect"), lines=svg.querySelectorAll("line");
   svg.querySelectorAll("text").forEach((el,i)=>{
-    el.textContent=L[i].t;
-    const b=el.getBBox();
+    el.textContent=narrow?shortName(L[i].t):L[i].t;
+    let b=el.getBBox();
+    // 글씨가 화면 밖으로 나가면 안쪽으로 밀어 넣는다 (선 끝도 같이)
+    const dx=b.x<4?4-b.x:(b.x+b.width>w-4?w-4-b.x-b.width:0);
+    if(dx){
+      el.setAttribute("x",parseFloat(el.getAttribute("x"))+dx);
+      lines[i].setAttribute("x2",L[i].lx+dx);
+      b=el.getBBox();
+    }
     rects[i].setAttribute("x",b.x-5); rects[i].setAttribute("y",b.y-2);
     rects[i].setAttribute("width",b.width+10); rects[i].setAttribute("height",b.height+4);
   });
-}
-// 폰: 부품 위치에 번호 동그라미. 겹치면 서로 밀어내고, 원래 위치까지 짧은 선을 긋는다
-function drawNumbers(w,h){
-  const v=new T.Vector3(), pts=[];
-  LABELS.forEach((L,i)=>{
-    v.copy(L.p()); v.project(camera);
-    if(v.z>1) return;
-    const ax=(v.x*0.5+0.5)*w, ay=(-v.y*0.5+0.5)*h;
-    pts.push({n:i+1, ax, ay, x:ax, y:ay});
-  });
-  const R=11, GAP=2*R+3;
-  for(let k=0;k<60;k++){
-    for(let i=0;i<pts.length;i++) for(let j=i+1;j<pts.length;j++){
-      const a=pts[i], b=pts[j]; let dx=b.x-a.x, dy=b.y-a.y; let d=Math.hypot(dx,dy);
-      if(d>=GAP) continue;
-      if(d<0.01){dx=0; dy=1; d=1;}
-      const push=(GAP-d)/2; a.x-=dx/d*push; a.y-=dy/d*push; b.x+=dx/d*push; b.y+=dy/d*push;
-    }
-    pts.forEach(p=>{p.x=Math.min(w-R-2,Math.max(R+2,p.x)); p.y=Math.min(h-R-2,Math.max(R+2,p.y));});
-  }
-  let s="";
-  pts.forEach(p=>{
-    if(Math.hypot(p.x-p.ax,p.y-p.ay)>R) s+='<line x1="'+p.ax+'" y1="'+p.ay+'" x2="'+p.x+'" y2="'+p.y+'"/><circle cx="'+p.ax+'" cy="'+p.ay+'" r="2.5"/>';
-  });
-  pts.forEach(p=>{
-    s+='<g class="num"><circle cx="'+p.x+'" cy="'+p.y+'" r="'+R+'"/><text x="'+p.x+'" y="'+(p.y+4)+'">'+p.n+'</text></g>';
-  });
-  svg.innerHTML=s;
 }
 
 /* ---------- 크기 ---------- */

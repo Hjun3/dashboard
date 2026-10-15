@@ -1,7 +1,7 @@
 const WARN = {
   none: "없음",
-  advisory: "호우주의보 발효 중",
-  warning: "호우경보 발효 중",
+  advisory: "주의보",
+  warning: "경보",
   unknown: "확인 불가",
 };
 
@@ -10,8 +10,12 @@ export default function WeatherCard({ mode, weather, scenarioClock }) {
   return (
     <section className="card">
       <div className="card-head">
-        <h2>날씨</h2>
-        {scenario ? <span className="badge">시나리오</span> : <span className="muted small">기상청 초단기실황</span>}
+        <h2>
+          날씨 {scenario && <span className="badge">시나리오</span>}
+        </h2>
+        {weather?.ok && (
+          <span className="muted small">{scenario ? `경과 ${scenarioClock}` : `기상청 ${formatObserved(weather.observedAt)}`}</span>
+        )}
       </div>
       {weather == null ? (
         <p className="muted">날씨를 불러오는 중입니다…</p>
@@ -23,13 +27,13 @@ export default function WeatherCard({ mode, weather, scenarioClock }) {
         </>
       ) : (
         <>
-          <dl className="kv">
-            <dt>1시간 강수량</dt><dd>{weather.rain1h} mm</dd>
-            <dt>비</dt><dd>{weather.raining ? "오는 중" : "안 옴"}</dd>
-            <dt>호우특보</dt>
-            <dd className={weather.warning === "advisory" || weather.warning === "warning" ? "warn" : ""}>{WARN[weather.warning] ?? "확인 불가"}</dd>
-            <dt>{scenario ? "시나리오 경과" : "관측 시각"}</dt>
-            <dd>{scenario ? scenarioClock : formatObserved(weather.observedAt)}</dd>
+          <dl className="facts">
+            <div><dt>1시간 강수량</dt><dd>{weather.rain1h} mm</dd></div>
+            <div><dt>비</dt><dd>{weather.raining ? "오는 중" : "안 옴"}</dd></div>
+            <div>
+              <dt>호우특보</dt>
+              <dd className={weather.warning === "advisory" || weather.warning === "warning" ? "warn" : ""}>{WARN[weather.warning] ?? "확인 불가"}</dd>
+            </div>
           </dl>
           {(weather.warning === "advisory" || weather.warning === "warning") && (
             <p className="note">호우특보 발효 중이라 측정 주기 단축 중</p>

@@ -52,9 +52,11 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   padding: calc(10px + env(safe-area-inset-top, 0px)) 16px 10px;
   background: var(--card); border-bottom: 1px solid var(--line);
 }
-.topbar-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; max-width: 1200px; margin: 0 auto; }
+.topbar-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; max-width: 1200px; margin: 0 auto; }
+.brand { min-width: 0; }
 .brand { display: flex; flex-direction: column; }
 .seg { display: flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.seg { flex: none; }
 .seg button { border: 0; background: var(--btn); padding: 7px 12px; font-size: 14px; cursor: pointer; }
 .seg button[aria-pressed="true"] { background: var(--btn-on); color: var(--btn-on-ink); }
 
@@ -76,6 +78,14 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .kv dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; }
 .kv dd.warn { color: #d23a3a; font-weight: 700; }
 .note { margin: 8px 0 0; font-size: 13px; font-weight: 600; color: var(--accent); }
+.card-head h2 { display: flex; align-items: center; gap: 6px; }
+
+/* 날씨: 세 칸을 한 줄로 */
+.facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin: 0; }
+.facts div { border: 1px solid var(--line); border-radius: 8px; padding: 4px 8px; }
+.facts dt { font-size: 12px; color: var(--muted); }
+.facts dd { margin: 0; font-weight: 700; font-variant-numeric: tabular-nums; }
+.facts dd.warn { color: #d23a3a; }
 
 /* 시나리오 조작 */
 .row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
@@ -99,17 +109,19 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .chip b { font-size: 13px; }
 .chip span { font-size: 10.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
 .chip[aria-pressed="true"] { border-color: var(--ink); box-shadow: 0 0 0 1px var(--card) inset; }
-.scenario-note { margin: 0; }
+.scenario-note { margin: 0 4px; }
 
 /* 지도 */
 .map { height: 260px; border-radius: 8px; overflow: hidden; z-index: 0; }
+@media (max-width: 599px) { .map { height: 190px; } }
 .pin-label { font-size: 11.5px; padding: 1px 6px; }
 .leaflet-container { font: inherit; }
 
 /* 상태 요약 */
-.summary { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 6px; }
-.summary li { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border: 1px solid var(--line); border-radius: 8px; }
-.summary strong { margin-left: auto; font-size: 17px; font-variant-numeric: tabular-nums; }
+/* 상태 요약: 한 줄에 다섯 칸 */
+.summary { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(56px, 1fr)); gap: 4px; }
+.summary li { display: grid; justify-items: center; gap: 2px; padding: 4px 2px; border: 1px solid var(--line); border-top: 4px solid; border-radius: 8px; font-size: 12px; text-align: center; white-space: nowrap; }
+.summary strong { font-size: 18px; line-height: 1.1; font-variant-numeric: tabular-nums; }
 .dot { width: 10px; height: 10px; border-radius: 50%; flex: none; }
 
 /* 우선 출동 목록 */

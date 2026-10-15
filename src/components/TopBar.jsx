@@ -12,7 +12,7 @@ export default function TopBar({ mode, onMode, clock, children }) {
         </div>
         <div className="seg" role="group" aria-label="모드">
           <button aria-pressed={mode === "live"} onClick={() => onMode("live")}>실시간</button>
-          <button aria-pressed={mode === "scenario"} onClick={() => onMode("scenario")}>시나리오 재생</button>
+          <button aria-pressed={mode === "scenario"} onClick={() => onMode("scenario")}>시나리오</button>
         </div>
       </div>
       {children}

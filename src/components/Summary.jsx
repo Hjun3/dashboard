@@ -8,8 +8,7 @@ export default function Summary({ results }) {
       <h2>상태 요약</h2>
       <ul className="summary">
         {SUMMARY_ORDER.filter((k) => k !== "hold" || count.hold > 0).map((k) => (
-          <li key={k}>
-            <span className="dot" style={{ background: STATES[k].color }} />
+          <li key={k} style={{ borderTopColor: STATES[k].color }}>
             <span>{STATES[k].label}</span>
             <strong>{count[k]}</strong>
           </li>

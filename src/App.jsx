@@ -200,11 +200,6 @@ export default function App() {
       <Toasts items={toasts} onSelect={select} />
       <main className="layout">
         <div className="col-left">
-          {mode === "scenario" && (
-            <p className="muted small scenario-note">
-              호우 하루를 약 60초로 압축했습니다 (화면 1초 = 실제 5분). 판정은 가상 센서 값을 판정 로직에 넣어 나온 결과입니다.
-            </p>
-          )}
           <WeatherCard mode={mode} weather={mode === "scenario" ? view.weather : liveWeather} scenarioClock={formatElapsed(view.now)} />
           <MapView drains={DRAINS} results={results} selectedId={selectedId} onSelect={select} />
           <Summary results={results} />
@@ -219,6 +214,11 @@ export default function App() {
             formatT={view.formatT}
             onOpen3D={open3D}
           />
+          {mode === "scenario" && (
+            <p className="muted small scenario-note">
+              시나리오는 호우 하루를 약 60초로 압축했습니다 (화면 1초 = 실제 5분). 판정은 가상 센서 값을 판정 로직에 넣어 나온 결과입니다.
+            </p>
+          )}
         </div>
       </main>
     </div>

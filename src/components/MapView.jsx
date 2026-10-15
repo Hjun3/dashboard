@@ -13,7 +13,7 @@ export default function MapView({ drains, results, selectedId, onSelect }) {
   onSelectRef.current = onSelect;
 
   useEffect(() => {
-    const m = L.map(box.current, { scrollWheelZoom: false, attributionControl: true })
+    const m = L.map(box.current, { scrollWheelZoom: false, attributionControl: true, zoomSnap: 0.25 })
       .setView([REGION.center.lat, REGION.center.lng], REGION.zoom);
     L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 19,
@@ -23,8 +23,14 @@ export default function MapView({ drains, results, selectedId, onSelect }) {
       const pin = L.circleMarker([d.lat, d.lng], { radius: 11, weight: 3, fillOpacity: 0.95 })
         .addTo(m)
         .on("click", () => onSelectRef.current(d.id));
-      pin.bindTooltip(d.name, { permanent: true, direction: "top", offset: [0, -10], className: "pin-label" });
+      pin.bindTooltip(shortName(d), { permanent: true, direction: "top", offset: [0, -10], className: "pin-label" });
       pins.current[d.id] = pin;
+    });
+    // 핀 6개와 이름표가 모두 보이도록 맞춘다 (위쪽은 이름표 자리만큼 더 띄움)
+    m.fitBounds(L.latLngBounds(drains.map((d) => [d.lat, d.lng])), {
+      paddingTopLeft: [24, 40],
+      paddingBottomRight: [24, 24],
+      maxZoom: REGION.zoom,
     });
     map.current = m;
     return () => m.remove();
@@ -37,7 +43,7 @@ export default function MapView({ drains, results, selectedId, onSelect }) {
         fillColor: STATES[r.state].color,
         color: d.id === selectedId ? "#1d2328" : "#ffffff",
       });
-      pins.current[d.id]?.setTooltipContent(`${d.name} · ${stateText(r)}`);
+      pins.current[d.id]?.setTooltipContent(`${shortName(d)} · ${stateText(r)}`);
     });
   }, [drains, results, selectedId]);
 
@@ -47,4 +53,9 @@ export default function MapView({ drains, results, selectedId, onSelect }) {
       <div ref={box} className="map" role="application" aria-label="빗물받이 위치 지도" />
     </section>
   );
+}
+
+// 좁은 지도에서 이름표가 덜 겹치도록 "시범 1번" → "1번"
+function shortName(d) {
+  return d.name.replace("시범 ", "");
 }
